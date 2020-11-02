@@ -1,0 +1,14 @@
+material RepeatedTextureView1
+{
+  technique
+  {
+    pass
+    {
+      texture_unit
+      {
+        // Relative to the location of the material script
+        texture ../textures/jmu_view1.jpg
+      }
+    }
+  }
+}
