@@ -20,6 +20,7 @@ import os
 
 
 from ament_index_python.packages import get_package_share_directory
+import launch
 from launch import LaunchDescription
 from launch.actions import IncludeLaunchDescription
 from launch_ros.actions import Node
@@ -60,9 +61,7 @@ def generate_launch_description():
 
         # START SIMULATOR
 
-        # Kill any lingering gzserver processes
-        ExecuteProcess(cmd=['pkill', 'gzserver'], output='screen'),
-        
+        #ExecuteProcess(cmd=['pkill', 'gzserver'], output='screen'),
         ExecuteProcess(
             cmd=['gazebo', '--verbose', LaunchConfiguration('world'), '-s', 'libgazebo_ros_init.so'],
             output='screen', condition=UnlessCondition(LaunchConfiguration('headless'))),
@@ -88,6 +87,24 @@ def generate_launch_description():
                 ('use_sim_time', use_sim_time)
             ],
         ),
+
+        # Start tb_fixer
+        Node(
+            package="jmu_turtlebot3_bringup",
+            node_executable="tb_fixer",
+            node_name="tb_fixer",
+            output="screen",
+        ),
+
+
+        # Start the reporting button
+        Node(
+            package="zeta_competition",
+            node_executable="report_button",
+            output="screen",
+        ),
+
+        
         
     ])
 

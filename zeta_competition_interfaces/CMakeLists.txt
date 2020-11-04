@@ -30,6 +30,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/Victim.msg"
   DEPENDENCIES geometry_msgs
   DEPENDENCIES std_msgs
+  DEPENDENCIES sensor_msgs
  )
 
 

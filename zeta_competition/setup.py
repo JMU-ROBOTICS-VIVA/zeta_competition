@@ -33,6 +33,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
+            'report_button = zeta_competition.report_button:main'
         ],
     },
 )
