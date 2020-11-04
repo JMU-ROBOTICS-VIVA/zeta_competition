@@ -30,11 +30,10 @@ from launch.substitutions import LaunchConfiguration
 from launch.actions import DeclareLaunchArgument
 from launch.actions import SetEnvironmentVariable
 from launch import LaunchContext
+from launch.conditions import IfCondition, UnlessCondition
 
-TURTLEBOT3_MODEL = os.environ['TURTLEBOT3_MODEL']
 
 def generate_launch_description():
-
 
     use_sim_time = LaunchConfiguration('use_sim_time', default='True')
     this_path = get_package_share_directory('zeta_competition')
@@ -57,11 +56,19 @@ def generate_launch_description():
     return LaunchDescription([
         DeclareLaunchArgument('world', default_value=default_world_path),
         DeclareLaunchArgument('map', default_value=default_map_path),
+        DeclareLaunchArgument('headless', default_value='false'),
 
         # START SIMULATOR
+
+        # Kill any lingering gzserver processes
+        ExecuteProcess(cmd=['pkill', 'gzserver'], output='screen'),
+        
         ExecuteProcess(
             cmd=['gazebo', '--verbose', LaunchConfiguration('world'), '-s', 'libgazebo_ros_init.so'],
-            output='screen'),
+            output='screen', condition=UnlessCondition(LaunchConfiguration('headless'))),
+        ExecuteProcess(
+            cmd=['gzserver', '--verbose', LaunchConfiguration('world'), '-s', 'libgazebo_ros_init.so'],
+            output='screen', condition=IfCondition(LaunchConfiguration('headless'))),
 
         ExecuteProcess(
             cmd=['ros2', 'param', 'set', '/gazebo', 'use_sim_time', use_sim_time],
