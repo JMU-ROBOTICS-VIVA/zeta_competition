@@ -40,7 +40,8 @@ def generate_launch_description():
     this_path = get_package_share_directory('zeta_competition')
 
     tb_launch_file_dir = os.path.join(get_package_share_directory('turtlebot3_gazebo'), 'launch')
-    nav2_launch_file_dir = os.path.join(get_package_share_directory('jmu_turtlebot3_bringup'), 'launch')
+    #nav2_launch_file_dir = os.path.join(get_package_share_directory('jmu_turtlebot3_bringup'), 'launch')
+    nav2_launch_file_dir = os.path.join(get_package_share_directory('turtlebot3_navigation2'), 'launch')
 
     default_world_path = os.path.join(this_path, 'worlds', 'room_practice.world')
     default_map_path = os.path.join(this_path, 'maps', 'room_practice.yaml')
@@ -50,9 +51,12 @@ def generate_launch_description():
 
     lc = LaunchContext()
     SetEnvironmentVariable('GAZEBO_RESOURCE_PATH',
-                           '/usr/share/gazebo-9:' + model_path + ":" + tb_model_path).visit(lc)
+                           '/usr/share/gazebo-11:' + model_path + ":" + tb_model_path).visit(lc)
     SetEnvironmentVariable('GAZEBO_MODEL_PATH',
-                           '/usr/share/gazebo-9/models:'+ model_path + ":" + tb_model_path).visit(lc)
+                           '/usr/share/gazebo-11/models:'+ model_path + ":" + tb_model_path).visit(lc)
+
+    #launch_file_dir = os.path.join(get_package_share_directory('turtlebot3_gazebo'), 'launch')
+    pkg_gazebo_ros = get_package_share_directory('gazebo_ros')
 
     return LaunchDescription([
         DeclareLaunchArgument('world', default_value=default_world_path),
@@ -60,22 +64,34 @@ def generate_launch_description():
         DeclareLaunchArgument('headless', default_value='false'),
 
         # START SIMULATOR
+        IncludeLaunchDescription(
+            PythonLaunchDescriptionSource(
+                os.path.join(pkg_gazebo_ros, 'launch', 'gzserver.launch.py')
+            ),
+            launch_arguments={'world': default_world_path}.items(),
+        ),
+
+        IncludeLaunchDescription(
+            PythonLaunchDescriptionSource(
+                os.path.join(pkg_gazebo_ros, 'launch', 'gzclient.launch.py')
+            ),
+        ),
 
         #ExecuteProcess(cmd=['pkill', 'gzserver'], output='screen'),
-        ExecuteProcess(
-            cmd=['gazebo', '--verbose', LaunchConfiguration('world'), '-s', 'libgazebo_ros_init.so'],
-            output='screen', condition=UnlessCondition(LaunchConfiguration('headless'))),
-        ExecuteProcess(
-            cmd=['gzserver', '--verbose', LaunchConfiguration('world'), '-s', 'libgazebo_ros_init.so'],
-            output='screen', condition=IfCondition(LaunchConfiguration('headless'))),
+        #ExecuteProcess(
+        #    cmd=['gazebo', '--verbose', LaunchConfiguration('world'), '-s', 'libgazebo_ros_init.so'],
+        #    output='screen', condition=UnlessCondition(LaunchConfiguration('headless'))),
+        #ExecuteProcess(
+        #    cmd=['gzserver', '--verbose', LaunchConfiguration('world'), '-s', 'libgazebo_ros_init.so'],
+        #    output='screen', condition=IfCondition(LaunchConfiguration('headless'))),
 
-        ExecuteProcess(
-            cmd=['ros2', 'param', 'set', '/gazebo', 'use_sim_time', use_sim_time],
-            output='screen'),
+        #ExecuteProcess(
+        #    cmd=['ros2', 'param', 'set', '/gazebo', 'use_sim_time', use_sim_time],
+        #    output='screen'),
 
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource([tb_launch_file_dir, '/robot_state_publisher.launch.py']),
-            launch_arguments=[('use_sim_time', use_sim_time)],
+            launch_arguments={'use_sim_time': use_sim_time}.items(),
         ),
 
         # START NAV SYSTEM
@@ -89,20 +105,20 @@ def generate_launch_description():
         ),
 
         # Start tb_fixer
-        Node(
-            package="jmu_turtlebot3_bringup",
-            node_executable="tb_fixer",
-            node_name="tb_fixer",
-            output="screen",
-        ),
+        #Node(
+        #    package="jmu_turtlebot3_bringup",
+        #    executable="tb_fixer",
+        #    name="tb_fixer",
+        #    output="screen",
+        #),
 
 
         # Start the reporting button
-        Node(
-            package="zeta_competition",
-            node_executable="report_button",
-            output="screen",
-        ),
+        #Node(
+        #    package="zeta_competition",
+        #    executable="report_button",
+        #    output="screen",
+        #),
 
         
         
