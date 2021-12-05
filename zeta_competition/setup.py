@@ -16,6 +16,7 @@ data_files=[
     ('share/' + package_name + '/launch/', glob('launch/*.launch.py')),
     ('share/' + package_name + '/worlds/', glob('worlds/*.world')),
     ('share/' + package_name + '/maps/', glob('maps/*.yaml')),
+    ('share/' + package_name + '/rviz/', glob('rviz/*.rviz')),
     ('share/' + package_name + '/maps/', glob('maps/*.pgm'))] + model_data_files
 #print(data_files)
 
@@ -33,7 +34,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'report_button = zeta_competition.report_button:main'
+            'report_button = zeta_competition.report_button:main',
+            'victim_listener = zeta_competition.victim_listener:main', 
         ],
     },
 )

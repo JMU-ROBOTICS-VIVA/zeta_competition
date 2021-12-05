@@ -57,6 +57,8 @@ class VictimListener(rclpy.node.Node):
 
     def __init__(self, file_prefix):
         super().__init__('victim_listener')
+        self.get_logger().info("Saving victim data with prefix:%s" % file_prefix)
+
         self.create_subscription(Victim, 'victim',
                                  self.victim_callback, 10)
 
@@ -70,8 +72,7 @@ class VictimListener(rclpy.node.Node):
         self.victims = {}
 
     def save_victims(self):
-
-        self.get_logger().info("Saving victim data...")
+        self.get_logger().info("Saving victim data with prefix:%s" % self.file_prefix)
         outfile = open(self.file_prefix + ".csv", 'w')
         for victim_id in self.victims:
             victim = self.victims[victim_id]
@@ -99,8 +100,13 @@ class VictimListener(rclpy.node.Node):
         self.save_victims()
 
 
-def main(prefix):
-    rclpy.init()
+def main(args=None):
+    if args is not None and len(args) > 0:
+        prefix=args[0]
+    else:
+        prefix="cs354_final"
+
+    rclpy.init(args=args)
     node = VictimListener(prefix)
     rclpy.spin(node)
     node.destroy_node()

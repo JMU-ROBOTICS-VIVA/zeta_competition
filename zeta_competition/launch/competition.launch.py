@@ -41,9 +41,11 @@ def generate_launch_description():
 
     tb_launch_file_dir = os.path.join(get_package_share_directory('turtlebot3_gazebo'), 'launch')
     #nav2_launch_file_dir = os.path.join(get_package_share_directory('jmu_turtlebot3_bringup'), 'launch')
-    nav2_launch_file_dir = os.path.join(get_package_share_directory('turtlebot3_navigation2'), 'launch')
+    #nav2_launch_file_dir = os.path.join(get_package_share_directory('turtlebot3_navigation2'), 'launch')
+    nav2_launch_file_dir = os.path.join(this_path,'launch')
 
     default_world_path = os.path.join(this_path, 'worlds', 'room_practice.world')
+
     default_map_path = os.path.join(this_path, 'maps', 'room_practice.yaml')
 
     model_path = os.path.join(this_path, 'models/')
@@ -61,7 +63,9 @@ def generate_launch_description():
     return LaunchDescription([
         DeclareLaunchArgument('world', default_value=default_world_path),
         DeclareLaunchArgument('map', default_value=default_map_path),
-        DeclareLaunchArgument('headless', default_value='false'),
+        #DeclareLaunchArgument('headless', default_value='false'),
+        DeclareLaunchArgument('gui', default_value='true',
+                              description='Set to "false" to run headless.'),
 
         # START SIMULATOR
         IncludeLaunchDescription(
@@ -75,6 +79,7 @@ def generate_launch_description():
             PythonLaunchDescriptionSource(
                 os.path.join(pkg_gazebo_ros, 'launch', 'gzclient.launch.py')
             ),
+            condition=IfCondition(LaunchConfiguration('gui'))
         ),
 
         #ExecuteProcess(cmd=['pkill', 'gzserver'], output='screen'),
@@ -93,6 +98,22 @@ def generate_launch_description():
             PythonLaunchDescriptionSource([tb_launch_file_dir, '/robot_state_publisher.launch.py']),
             launch_arguments={'use_sim_time': use_sim_time}.items(),
         ),
+        # Start Aruco node detector
+        Node(
+            package="ros2_aruco",
+            executable="aruco_node",
+            output="screen",
+            parameters=[{'use_sim_time': True,
+                         'camera_frame': 'camera_rgb_optical_frame'}]
+        ),
+
+        # Start transform service
+        Node(
+            package="transform_service",
+            executable="transform_service",
+            output="screen",
+            parameters=[{'use_sim_time': True}]
+        ),
 
         # START NAV SYSTEM
         
@@ -103,25 +124,12 @@ def generate_launch_description():
                 ('use_sim_time', use_sim_time)
             ],
         ),
-
-        # Start tb_fixer
-        #Node(
-        #    package="jmu_turtlebot3_bringup",
-        #    executable="tb_fixer",
-        #    name="tb_fixer",
-        #    output="screen",
-        #),
-
-
         # Start the reporting button
-        #Node(
-        #    package="zeta_competition",
-        #    executable="report_button",
-        #    output="screen",
-        #),
-
-        
-        
+        Node(
+            package="zeta_competition",
+            executable="report_button",
+            output="screen",
+        ),
     ])
 
 if __name__ == "__main__":
