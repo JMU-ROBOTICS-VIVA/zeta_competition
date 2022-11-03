@@ -1,0 +1,7 @@
+set_initial_pose:
+  ros__parameters:
+    x: 4.8
+    y: 0.8
+    theta: 3.14
+    pos_variance: 0.1
+    angle_variance: 0.6

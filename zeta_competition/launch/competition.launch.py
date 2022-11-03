@@ -40,13 +40,14 @@ def generate_launch_description():
     this_path = get_package_share_directory('zeta_competition')
 
     tb_launch_file_dir = os.path.join(get_package_share_directory('turtlebot3_gazebo'), 'launch')
-    #nav2_launch_file_dir = os.path.join(get_package_share_directory('jmu_turtlebot3_bringup'), 'launch')
-    #nav2_launch_file_dir = os.path.join(get_package_share_directory('turtlebot3_navigation2'), 'launch')
-    nav2_launch_file_dir = os.path.join(this_path,'launch')
+    nav2_launch_file_dir = os.path.join(get_package_share_directory('jmu_turtlebot3_bringup'), 'launch')
+    #nav2_launch_file_dir = os.path.join(this_path,'launch')
 
     default_world_path = os.path.join(this_path, 'worlds', 'room_practice.world')
 
     default_map_path = os.path.join(this_path, 'maps', 'room_practice.yaml')
+
+    default_pose = os.path.join(this_path, 'config', 'sim_initial_pose.yaml')
 
     model_path = os.path.join(this_path, 'models/')
     tb_model_path = os.path.join(get_package_share_directory('turtlebot3_gazebo'), 'models/')
@@ -63,9 +64,14 @@ def generate_launch_description():
     return LaunchDescription([
         DeclareLaunchArgument('world', default_value=default_world_path),
         DeclareLaunchArgument('map', default_value=default_map_path),
-        #DeclareLaunchArgument('headless', default_value='false'),
+        DeclareLaunchArgument('initial_pose', default_value=default_pose),
         DeclareLaunchArgument('gui', default_value='true',
                               description='Set to "false" to run headless.'),
+        DeclareLaunchArgument(
+            'use_sim_time',
+            default_value='true',
+            description='Use simulation (Gazebo) clock if true'),
+
 
         # START SIMULATOR
         IncludeLaunchDescription(
@@ -82,28 +88,17 @@ def generate_launch_description():
             condition=IfCondition(LaunchConfiguration('gui'))
         ),
 
-        #ExecuteProcess(cmd=['pkill', 'gzserver'], output='screen'),
-        #ExecuteProcess(
-        #    cmd=['gazebo', '--verbose', LaunchConfiguration('world'), '-s', 'libgazebo_ros_init.so'],
-        #    output='screen', condition=UnlessCondition(LaunchConfiguration('headless'))),
-        #ExecuteProcess(
-        #    cmd=['gzserver', '--verbose', LaunchConfiguration('world'), '-s', 'libgazebo_ros_init.so'],
-        #    output='screen', condition=IfCondition(LaunchConfiguration('headless'))),
-
-        #ExecuteProcess(
-        #    cmd=['ros2', 'param', 'set', '/gazebo', 'use_sim_time', use_sim_time],
-        #    output='screen'),
-
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource([tb_launch_file_dir, '/robot_state_publisher.launch.py']),
             launch_arguments={'use_sim_time': use_sim_time}.items(),
         ),
+
         # Start Aruco node detector
         Node(
             package="ros2_aruco",
             executable="aruco_node",
             output="screen",
-            parameters=[{'use_sim_time': True,
+            parameters=[{'use_sim_time': LaunchConfiguration('use_sim_time'),
                          'camera_frame': 'camera_rgb_optical_frame'}]
         ),
 
@@ -112,7 +107,7 @@ def generate_launch_description():
             package="transform_service",
             executable="transform_service",
             output="screen",
-            parameters=[{'use_sim_time': True}]
+            parameters=[{'use_sim_time': LaunchConfiguration('use_sim_time')}]
         ),
 
         # START NAV SYSTEM
@@ -121,7 +116,7 @@ def generate_launch_description():
             PythonLaunchDescriptionSource([nav2_launch_file_dir, '/navigation2.launch.py']),
             launch_arguments=[
                 ('map', LaunchConfiguration('map')),
-                ('use_sim_time', use_sim_time)
+                ('use_sim_time', LaunchConfiguration('use_sim_time'))
             ],
         ),
         # Start the reporting button
@@ -130,6 +125,15 @@ def generate_launch_description():
             executable="report_button",
             output="screen",
         ),
+        
+        # Start initial pose setter
+        Node(
+            package="zeta_competition",
+            executable="set_initial_pose",
+            output="screen",
+            parameters=[LaunchConfiguration('initial_pose')]
+        ),
+
     ])
 
 if __name__ == "__main__":
