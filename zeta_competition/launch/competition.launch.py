@@ -27,7 +27,7 @@ from launch_ros.actions import Node
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import ThisLaunchFileDir
 from launch.actions import ExecuteProcess
-from launch.substitutions import LaunchConfiguration
+from launch.substitutions import LaunchConfiguration, PythonExpression
 from launch.actions import DeclareLaunchArgument
 from launch.actions import SetEnvironmentVariable
 from launch import LaunchContext
@@ -79,13 +79,16 @@ def generate_launch_description():
                 os.path.join(pkg_gazebo_ros, 'launch', 'gzserver.launch.py')
             ),
             launch_arguments={'world': default_world_path}.items(),
+            condition=IfCondition(LaunchConfiguration("use_sim_time"))
         ),
 
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(
                 os.path.join(pkg_gazebo_ros, 'launch', 'gzclient.launch.py')
             ),
-            condition=IfCondition(LaunchConfiguration('gui'))
+            condition=IfCondition(PythonExpression(
+                ["'", LaunchConfiguration('gui'), "' == 'true' and '", LaunchConfiguration("use_sim_time"), "' == 'true'"]
+            ))
         ),
 
         IncludeLaunchDescription(
