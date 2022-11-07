@@ -20,18 +20,15 @@ import os
 
 
 from ament_index_python.packages import get_package_share_directory
-import launch
 from launch import LaunchDescription
 from launch.actions import IncludeLaunchDescription
 from launch_ros.actions import Node
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import ThisLaunchFileDir
-from launch.actions import ExecuteProcess
 from launch.substitutions import LaunchConfiguration, PythonExpression
 from launch.actions import DeclareLaunchArgument
 from launch.actions import SetEnvironmentVariable
 from launch import LaunchContext
-from launch.conditions import IfCondition, UnlessCondition
+from launch.conditions import IfCondition
 
 
 def generate_launch_description():
@@ -41,12 +38,9 @@ def generate_launch_description():
 
     tb_launch_file_dir = os.path.join(get_package_share_directory('turtlebot3_gazebo'), 'launch')
     nav2_launch_file_dir = os.path.join(get_package_share_directory('jmu_turtlebot3_bringup'), 'launch')
-    #nav2_launch_file_dir = os.path.join(this_path,'launch')
 
     default_world_path = os.path.join(this_path, 'worlds', 'room_practice.world')
-
     default_map_path = os.path.join(this_path, 'maps', 'room_practice.yaml')
-
     default_pose = os.path.join(this_path, 'config', 'sim_initial_pose.yaml')
 
     model_path = os.path.join(this_path, 'models/')
@@ -58,7 +52,6 @@ def generate_launch_description():
     SetEnvironmentVariable('GAZEBO_MODEL_PATH',
                            '/usr/share/gazebo-11/models:'+ model_path + ":" + tb_model_path).visit(lc)
 
-    #launch_file_dir = os.path.join(get_package_share_directory('turtlebot3_gazebo'), 'launch')
     pkg_gazebo_ros = get_package_share_directory('gazebo_ros')
 
     return LaunchDescription([
@@ -114,7 +107,6 @@ def generate_launch_description():
         ),
 
         # START NAV SYSTEM
-        
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource([nav2_launch_file_dir, '/navigation2.launch.py']),
             launch_arguments=[
@@ -122,6 +114,7 @@ def generate_launch_description():
                 ('use_sim_time', LaunchConfiguration('use_sim_time'))
             ],
         ),
+        
         # Start the reporting button
         Node(
             package="zeta_competition",
