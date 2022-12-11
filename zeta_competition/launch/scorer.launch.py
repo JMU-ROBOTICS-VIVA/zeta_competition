@@ -63,7 +63,7 @@ def generate_launch_description():
             ],
         ),
         Node(
-            package="zeta_competition_admin",
+            package="zeta_competition",
             executable="zeta_scorer",
             name="zeta_scorer",
             output="screen",
