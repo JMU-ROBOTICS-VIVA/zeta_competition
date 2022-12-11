@@ -17,6 +17,7 @@ data_files=[
     ('share/' + package_name + '/worlds/', glob('worlds/*.world')),
     ('share/' + package_name + '/maps/', glob('maps/*.yaml')),
     ('share/' + package_name + '/config/', glob('config/*.yaml')),
+    ('share/' + package_name + '/config/', glob('config/*.csv')),
     ('share/' + package_name + '/rviz/', glob('rviz/*.rviz')),
     ('share/' + package_name + '/maps/', glob('maps/*.pgm'))] + model_data_files
 #print(data_files)
@@ -36,8 +37,9 @@ setup(
     entry_points={
         'console_scripts': [
             'report_button = zeta_competition.report_button:main',
-            'victim_listener = zeta_competition.victim_listener:main', 
-            'set_initial_pose = zeta_competition.set_initial_pose:main', 
+            'victim_listener = zeta_competition.victim_listener:main',
+            'set_initial_pose = zeta_competition.set_initial_pose:main',
+            'zeta_scorer = zeta_competition.zeta_scorer:main',
         ],
     },
 )
