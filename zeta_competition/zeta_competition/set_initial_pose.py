@@ -17,13 +17,17 @@ class InitialPoseNode(rclpy.node.Node):
         super().__init__('set_initial_pose')
         self.pose_pub = self.create_publisher(PoseWithCovarianceStamped,
                                               'initialpose', 10)
+
+        self.create_subscription(PoseWithCovarianceStamped, 'amcl_pose',
+                                 self.amcl_pose_callback, 10)
+        self.timer = self.create_timer(1, self.timer_callback)
         self.declare_parameter('x', 0)
         self.declare_parameter('y', 0)
         self.declare_parameter('theta', 0)
         self.declare_parameter('pos_variance', .25)
         self.declare_parameter('angle_variance', 0.07)
 
-        self.timer = self.create_timer(.1, self.timer_callback)
+        self.pose_from_amcl = None
         self.future = Future()
 
     def create_pose_w_covariance_stamped(self, x, y, theta, pos_variance, angle_variance):
@@ -44,19 +48,26 @@ class InitialPoseNode(rclpy.node.Node):
         pose.pose.covariance[35] = angle_variance
         return pose
 
+    def amcl_pose_callback(self, msg):
+        self.pose_from_amcl = msg
 
     def timer_callback(self):
-        if self.count_subscribers('initialpose') > 0:  
+        if self.pose_from_amcl is not None:
+            self.get_logger().info('Got pose from amcl, exiting.')
+            self.future.set_result(None)
+            self.timer.cancel()
+
+        elif self.count_subscribers('initialpose') > 0:
+            self.get_logger().info('Setting initial pose...')
             x = self.get_parameter('x').get_parameter_value().double_value
-            print(x)
             y = self.get_parameter('y').get_parameter_value().double_value
             theta = self.get_parameter('theta').get_parameter_value().double_value
             pos_var = self.get_parameter('pos_variance').get_parameter_value().double_value
             angle_var = self.get_parameter('angle_variance').get_parameter_value().double_value
             pose = self.create_pose_w_covariance_stamped(x, y, theta, pos_var, angle_var)
             self.pose_pub.publish(pose)
-            self.future.set_result(None)
-            self.timer.cancel()
+        else:
+            self.get_logger().info('initialpose subscriber not available yet.')
 
 
 def main():
