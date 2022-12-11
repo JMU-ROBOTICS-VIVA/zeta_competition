@@ -41,18 +41,14 @@ def generate_launch_description():
     this_path = get_package_share_directory('zeta_competition')
     zeta_comp_launch_file_dir = os.path.join(this_path, 'launch')
 
-    default_world_path = os.path.join(this_path, 'worlds', 'room_practice.world')
     default_map_path = os.path.join(this_path, 'maps', 'room_practice.yaml')
     default_pose = os.path.join(this_path, 'config', 'sim_initial_pose.yaml')
     rviz_config_path = os.path.join(this_path, 'rviz', 'final_scoring.rviz')
 
     return LaunchDescription([
         DeclareLaunchArgument('ground_truth', default_value=os.path.join(this_path, 'config/default_victims.csv')),
-        DeclareLaunchArgument('world', default_value=default_world_path),
         DeclareLaunchArgument('map', default_value=default_map_path),
         DeclareLaunchArgument('initial_pose', default_value=default_pose),
-        DeclareLaunchArgument('gui', default_value='true',
-                              description='Set to "false" to run headless.'),
         DeclareLaunchArgument(
             'use_sim_time',
             default_value='true',
@@ -62,8 +58,6 @@ def generate_launch_description():
             PythonLaunchDescriptionSource([zeta_comp_launch_file_dir, '/competition.launch.py']),
             launch_arguments=[
                 ('map', LaunchConfiguration('map')),
-                ('world', LaunchConfiguration('world')),
-                ('gui', LaunchConfiguration('gui')),
                 ('initial_pose', LaunchConfiguration('initial_pose')),
                 ('use_sim_time', use_sim_time)
             ],
