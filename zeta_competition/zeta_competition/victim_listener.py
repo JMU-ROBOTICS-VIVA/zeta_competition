@@ -102,11 +102,11 @@ class VictimListener(rclpy.node.Node):
 
 def main(args=None):
     if args is not None and len(args) > 0:
-        prefix=args[0]
+        prefix=args
     else:
         prefix="cs354_final"
 
-    rclpy.init(args=args)
+    rclpy.init()
     node = VictimListener(prefix)
     rclpy.spin(node)
     node.destroy_node()

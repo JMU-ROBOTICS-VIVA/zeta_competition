@@ -21,9 +21,9 @@ class InitialPoseNode(rclpy.node.Node):
         self.create_subscription(PoseWithCovarianceStamped, 'amcl_pose',
                                  self.amcl_pose_callback, 10)
         self.timer = self.create_timer(1, self.timer_callback)
-        self.declare_parameter('x', 0)
-        self.declare_parameter('y', 0)
-        self.declare_parameter('theta', 0)
+        self.declare_parameter('x', 0.0)
+        self.declare_parameter('y', 0.0)
+        self.declare_parameter('theta', 0.0)
         self.declare_parameter('pos_variance', .25)
         self.declare_parameter('angle_variance', 0.07)
 

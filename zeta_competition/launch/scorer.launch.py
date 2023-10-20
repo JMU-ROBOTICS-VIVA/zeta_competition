@@ -59,7 +59,7 @@ def generate_launch_description():
             launch_arguments=[
                 ('map', LaunchConfiguration('map')),
                 ('initial_pose', LaunchConfiguration('initial_pose')),
-                ('use_sim_time', use_sim_time)
+                ('use_sim_time', LaunchConfiguration('use_sim_time'))
             ],
         ),
         Node(
@@ -72,8 +72,8 @@ def generate_launch_description():
 
         Node(
             package='rviz2',
-            node_executable='rviz2',
-            node_name='rviz2_comp',
+            executable='rviz2',
+            name='rviz2_scoring',
             arguments=['-d', rviz_config_path],
             parameters=[{'use_sim_time': use_sim_time}],
             output='screen'),

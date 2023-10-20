@@ -4,6 +4,7 @@ GUI Node for scoring Zeta competition.
 Author: Nathan Sprague
 """
 
+import sys
 from tkinter import *
 
 import rclpy

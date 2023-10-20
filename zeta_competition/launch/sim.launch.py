@@ -37,7 +37,6 @@ def generate_launch_description():
     this_path = get_package_share_directory('zeta_competition')
 
     tb_launch_file_dir = os.path.join(get_package_share_directory('turtlebot3_gazebo'), 'launch')
-    nav2_launch_file_dir = os.path.join(get_package_share_directory('jmu_turtlebot3_bringup'), 'launch')
 
     default_world_path = os.path.join(this_path, 'worlds', 'room_practice.world')
     default_map_path = os.path.join(this_path, 'maps', 'room_practice.yaml')
@@ -73,7 +72,7 @@ def generate_launch_description():
             PythonLaunchDescriptionSource(
                 os.path.join(pkg_gazebo_ros, 'launch', 'gzserver.launch.py')
             ),
-            launch_arguments={'world': default_world_path}.items(),
+            launch_arguments={'world':  LaunchConfiguration('world')}.items(),
             condition=IfCondition(LaunchConfiguration("use_sim_time"))
         ),
 

@@ -17,8 +17,9 @@
 # Authors: Darby Lim
 
 import os
+import time
 
-
+import rclpy
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import IncludeLaunchDescription
@@ -29,6 +30,18 @@ from launch.actions import DeclareLaunchArgument
 from launch.actions import SetEnvironmentVariable
 from launch import LaunchContext
 from launch.conditions import IfCondition
+from launch.conditions import UnlessCondition
+
+def get_node_names():
+    """Return all active node names."""
+    if not rclpy.ok():
+        rclpy.init()
+    node = rclpy.create_node('__anonymous')
+    rclpy.spin_once(node, timeout_sec=.2)
+    names = node.get_node_names()
+    node.destroy_node()
+    rclpy.shutdown()
+    return names
 
 
 def generate_launch_description():
@@ -36,12 +49,12 @@ def generate_launch_description():
     use_sim_time = LaunchConfiguration('use_sim_time', default='True')
     this_path = get_package_share_directory('zeta_competition')
 
-    nav2_launch_file_dir = os.path.join(get_package_share_directory('jmu_turtlebot3_bringup'), 'launch')
+    nav2_launch_file_dir = os.path.join(get_package_share_directory('turtlebot3_navigation2'), 'launch')
 
     default_map_path = os.path.join(this_path, 'maps', 'room_practice.yaml')
     default_pose = os.path.join(this_path, 'config', 'sim_initial_pose.yaml')
 
-    return LaunchDescription([
+    ld = LaunchDescription([
         DeclareLaunchArgument('map', default_value=default_map_path),
         DeclareLaunchArgument('initial_pose', default_value=default_pose),
 
@@ -57,14 +70,6 @@ def generate_launch_description():
             output="screen",
             parameters=[{'use_sim_time': LaunchConfiguration('use_sim_time'),
                          'camera_frame': 'camera_rgb_optical_frame'}]
-        ),
-
-        # Start transform service
-        Node(
-            package="transform_service",
-            executable="transform_service",
-            output="screen",
-            parameters=[{'use_sim_time': LaunchConfiguration('use_sim_time')}]
         ),
 
         # START NAV SYSTEM
@@ -92,6 +97,16 @@ def generate_launch_description():
         ),
 
     ])
+    node_names = get_node_names()
+    tb3_dir = get_package_share_directory('turtlebot3_bringup')
+    tb3_launch_file_dir = os.path.join(tb3_dir, 'launch')
+    if 'image_republisher' not in node_names:
+        ld.add_entity(IncludeLaunchDescription(
+            PythonLaunchDescriptionSource([tb3_launch_file_dir,
+                                           '/image_transport.launch.py']),
+            condition=UnlessCondition(LaunchConfiguration("use_sim_time"))
+        ))
+    return ld
 
 if __name__ == "__main__":
     generate_launch_description()
