@@ -4,10 +4,10 @@ import os
 
 package_name = 'zeta_competition'
 
-model_data_files = []
-for cur_dir, _, files in os.walk('models'):
-    to = 'share/' + package_name + '/' + cur_dir + "/"
-    model_data_files.append((to, [cur_dir + "/" + f for f in files]))
+# model_data_files = []
+# for cur_dir, _, files in os.walk('models'):
+#     to = 'share/' + package_name + '/' + cur_dir + "/"
+#     model_data_files.append((to, [cur_dir + "/" + f for f in files]))
 
 data_files=[
     ('share/ament_index/resource_index/packages',
@@ -19,7 +19,7 @@ data_files=[
     ('share/' + package_name + '/config/', glob('config/*.yaml')),
     ('share/' + package_name + '/config/', glob('config/*.csv')),
     ('share/' + package_name + '/rviz/', glob('rviz/*.rviz')),
-    ('share/' + package_name + '/maps/', glob('maps/*.pgm'))] + model_data_files
+    ('share/' + package_name + '/maps/', glob('maps/*.pgm'))]
 #print(data_files)
 
 setup(

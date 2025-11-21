@@ -36,19 +36,19 @@ def generate_launch_description():
     use_sim_time = LaunchConfiguration('use_sim_time', default='True')
     this_path = get_package_share_directory('zeta_competition')
 
-    tb_launch_file_dir = os.path.join(get_package_share_directory('turtlebot3_gazebo'), 'launch')
+    tb_launch_file_dir = os.path.join(get_package_share_directory('turtlebot4_gz_bringup'), 'launch')
 
     default_world_path = os.path.join(this_path, 'worlds', 'room_practice.world')
     default_map_path = os.path.join(this_path, 'maps', 'room_practice.yaml')
 
     model_path = os.path.join(this_path, 'models/')
-    tb_model_path = os.path.join(get_package_share_directory('turtlebot3_gazebo'), 'models/')
+    # tb_model_path = os.path.join(get_package_share_directory('turtlebot3_gazebo'), 'models/')
 
     lc = LaunchContext()
-    SetEnvironmentVariable('GAZEBO_RESOURCE_PATH',
-                           '/usr/share/gazebo-11:' + model_path + ":" + tb_model_path).visit(lc)
-    SetEnvironmentVariable('GAZEBO_MODEL_PATH',
-                           '/usr/share/gazebo-11/models:'+ model_path + ":" + tb_model_path).visit(lc)
+    # SetEnvironmentVariable('GAZEBO_RESOURCE_PATH',
+    #                        '/usr/share/gazebo-11:' + model_path + ":" + tb_model_path).visit(lc)
+    # SetEnvironmentVariable('GAZEBO_MODEL_PATH',
+    #                        '/usr/share/gazebo-11/models:'+ model_path + ":" + tb_model_path).visit(lc)
 
     pkg_gazebo_ros = get_package_share_directory('gazebo_ros')
 
