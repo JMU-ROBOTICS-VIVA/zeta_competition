@@ -15,6 +15,8 @@
 # limitations under the License.
 #
 # Authors: Darby Lim
+#
+# Modified by: Rafael D.
 
 import os
 
@@ -47,7 +49,7 @@ def generate_launch_description():
     scorer = LaunchConfiguration('scoring', default='False')
     this_path = get_package_share_directory('zeta_competition')
 
-    nav2_launch_file_dir = os.path.join(get_package_share_directory('turtlebot3_navigation2'), 'launch')
+    nav2_launch_file_dir = os.path.join(get_package_share_directory('turtlebot4_navigation'), 'launch')
 
     default_map_path = os.path.join(this_path, 'maps', 'room_practice.yaml')
     default_pose = os.path.join(this_path, 'config', 'sim_initial_pose.yaml')
@@ -70,17 +72,19 @@ def generate_launch_description():
             executable="aruco_node",
             output="screen",
             parameters=[{'use_sim_time': LaunchConfiguration('use_sim_time'),
-                         'camera_frame': 'camera_rgb_optical_frame'}]
+                         'image_topic': '/oakd/rgb/preview/image_raw',
+                         'camera_frame': 'oakd_rgb_camera_optical_frame',
+                         'camera_info_topic': '/oakd/rgb/preview/camera_info'}]
         ),
 
-        # START NAV SYSTEM
-        IncludeLaunchDescription(
-            PythonLaunchDescriptionSource([nav2_launch_file_dir, '/navigation2.launch.py']),
-            launch_arguments=[
-                ('map', LaunchConfiguration('map')),
-                ('use_sim_time', LaunchConfiguration('use_sim_time'))
-            ],
-        ),
+        # START NAV SYSTEM - (NOW LAUNCHED WITH SIMULATOR, NOT HERE)
+        # IncludeLaunchDescription(
+        #     PythonLaunchDescriptionSource([nav2_launch_file_dir, '/localization.launch.py']),
+        #     launch_arguments=[
+        #         ('map', LaunchConfiguration('map')),
+        #         ('use_sim_time', LaunchConfiguration('use_sim_time'))
+        #     ],
+        # ),
 
         # Start initial pose setter
         Node(
@@ -118,15 +122,18 @@ def generate_launch_description():
         ),
 
     ])
-    node_names = get_node_names()
-    tb3_dir = get_package_share_directory('turtlebot3_bringup')
-    tb3_launch_file_dir = os.path.join(tb3_dir, 'launch')
-    if 'image_republisher' not in node_names:
-        ld.add_entity(IncludeLaunchDescription(
-            PythonLaunchDescriptionSource([tb3_launch_file_dir,
-                                           '/image_transport.launch.py']),
-            condition=UnlessCondition(LaunchConfiguration("use_sim_time"))
-        ))
+
+    # NOT NECESSARY FOR TB4
+    # node_names = get_node_names()
+    # tb3_dir = get_package_share_directory('turtlebot3_bringup')
+    # tb3_launch_file_dir = os.path.join(tb3_dir, 'launch')
+    # if 'image_republisher' not in node_names:
+    #     ld.add_entity(IncludeLaunchDescription(
+    #         PythonLaunchDescriptionSource([tb3_launch_file_dir,
+    #                                        '/image_transport.launch.py']),
+    #         condition=UnlessCondition(LaunchConfiguration("use_sim_time"))
+    #     ))
+
     return ld
 
 if __name__ == "__main__":
