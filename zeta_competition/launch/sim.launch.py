@@ -1,6 +1,4 @@
-#!/usr/bin/env python3
-#
-# Copyright 2019 ROBOTIS CO., LTD.
+# Copyright 2023 Clearpath Robotics, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,78 +12,99 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# Authors: Darby Lim
-
-import os
-
+# @author Roni Kreinin (rkreinin@clearpathrobotics.com)
+# 
+# Modified by: Rafael D.
 
 from ament_index_python.packages import get_package_share_directory
+
 from launch import LaunchDescription
-from launch.actions import IncludeLaunchDescription
-from launch_ros.actions import Node
-from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import LaunchConfiguration, PythonExpression
 from launch.actions import DeclareLaunchArgument
-from launch.actions import SetEnvironmentVariable
-from launch import LaunchContext
+from launch.actions import IncludeLaunchDescription
+from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
+from launch.substitutions import PythonExpression
 from launch.conditions import IfCondition
+
+this_path = get_package_share_directory('zeta_competition')
+
+ARGUMENTS = [
+    DeclareLaunchArgument('namespace', default_value='',
+                          description='Robot namespace'),
+    DeclareLaunchArgument('rviz', default_value='true',
+                          choices=['true', 'false'], description='Start rviz.'),
+    # DeclareLaunchArgument('map', default_value=PathJoinSubstitution([this_path, 'maps', 'room_practice.yaml']),
+    #                       description='The map to display in Rviz2'),
+    DeclareLaunchArgument('model', default_value='lite',
+                          choices=['standard', 'lite'],
+                          description='Turtlebot4 Model'),
+    DeclareLaunchArgument('world', default_value='room_practice_v2',
+                        choices=['room_practice_v2', 'new_v2'], description='Simulator World')
+]
+
+for pose_element in ['x', 'y', 'z', 'yaw']:
+    ARGUMENTS.append(DeclareLaunchArgument(pose_element, default_value='0.0',
+                     description=f'{pose_element} component of the robot pose.'))
 
 
 def generate_launch_description():
 
-    use_sim_time = LaunchConfiguration('use_sim_time', default='True')
+    # Replaced with the competition simulator launch.
     this_path = get_package_share_directory('zeta_competition')
 
-    tb_launch_file_dir = os.path.join(get_package_share_directory('turtlebot4_gz_bringup'), 'launch')
+    # Paths
+    gazebo_launch = PathJoinSubstitution(
+        [this_path, 'launch', 'newsim.launch.py'])
+    robot_spawn_launch = PathJoinSubstitution(
+        [this_path, 'launch', 'turtlebot4_spawn_mod.launch.py'])
 
-    default_world_path = os.path.join(this_path, 'worlds', 'room_practice.world')
-    default_map_path = os.path.join(this_path, 'maps', 'room_practice.yaml')
+    gazebo = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource([gazebo_launch]),
+        launch_arguments=[
+            ('world', LaunchConfiguration('world'))]
+    )
 
-    model_path = os.path.join(this_path, 'models/')
-    # tb_model_path = os.path.join(get_package_share_directory('turtlebot3_gazebo'), 'models/')
+    robot_spawn_practice = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource([robot_spawn_launch]),
+        launch_arguments=[
+            ('namespace', LaunchConfiguration('namespace')),
+            ('rviz', LaunchConfiguration('rviz')),
+            ('x', '-0.1'),
+            ('y', '-5.35'),
+            ('z', '0.03'),
+            ('yaw', LaunchConfiguration('yaw')),
+            ('model', LaunchConfiguration('model')),
+            ('map', PathJoinSubstitution([this_path, 'maps', "room_practice.yaml"])),
+            ('nav2', 'true'),
+            ('slam', 'false'),
+            ('localization', 'true')],
+        condition=IfCondition(PythonExpression([
+            '"', LaunchConfiguration('world'), '" == "room_practice_v2"'
+        ]))
+    )
 
-    lc = LaunchContext()
-    # SetEnvironmentVariable('GAZEBO_RESOURCE_PATH',
-    #                        '/usr/share/gazebo-11:' + model_path + ":" + tb_model_path).visit(lc)
-    # SetEnvironmentVariable('GAZEBO_MODEL_PATH',
-    #                        '/usr/share/gazebo-11/models:'+ model_path + ":" + tb_model_path).visit(lc)
+    robot_spawn_new = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource([robot_spawn_launch]),
+        launch_arguments=[
+            ('namespace', LaunchConfiguration('namespace')),
+            ('rviz', LaunchConfiguration('rviz')),
+            ('x', '-1.15'),
+            ('y', '-5.35'),
+            ('z', '-0.00'),
+            ('yaw', '-1.59'),
+            ('model', LaunchConfiguration('model')),
+            ('map', PathJoinSubstitution([this_path, 'maps', "new.yaml"])),
+            ('nav2', 'true'),
+            ('slam', 'false'),
+            ('localization', 'true')],
+        condition=IfCondition(PythonExpression([
+            '"', LaunchConfiguration('world'), '" == "new_v2"'
+        ]))
+    )
 
-    pkg_gazebo_ros = get_package_share_directory('gazebo_ros')
-
-    return LaunchDescription([
-        DeclareLaunchArgument('world', default_value=default_world_path),
-        DeclareLaunchArgument('map', default_value=default_map_path),
-        DeclareLaunchArgument('gui', default_value='true',
-                              description='Set to "false" to run headless.'),
-        DeclareLaunchArgument(
-            'use_sim_time',
-            default_value='true',
-            description='Use simulation (Gazebo) clock if true'),
-
-        IncludeLaunchDescription(
-            PythonLaunchDescriptionSource([tb_launch_file_dir, '/robot_state_publisher.launch.py']),
-            launch_arguments={'use_sim_time': use_sim_time}.items(),
-        ),
-
-        # START SIMULATOR
-        IncludeLaunchDescription(
-            PythonLaunchDescriptionSource(
-                os.path.join(pkg_gazebo_ros, 'launch', 'gzserver.launch.py')
-            ),
-            launch_arguments={'world':  LaunchConfiguration('world')}.items(),
-            condition=IfCondition(LaunchConfiguration("use_sim_time"))
-        ),
-
-        IncludeLaunchDescription(
-            PythonLaunchDescriptionSource(
-                os.path.join(pkg_gazebo_ros, 'launch', 'gzclient.launch.py')
-            ),
-            condition=IfCondition(PythonExpression(
-                ["'", LaunchConfiguration('gui'), "' == 'true' and '", LaunchConfiguration("use_sim_time"), "' == 'true'"]
-            ))
-        ),
-
-    ])
-
-if __name__ == "__main__":
-    generate_launch_description()
+    # Create launch description and add actions
+    ld = LaunchDescription(ARGUMENTS)
+    ld.add_action(gazebo)
+    ld.add_action(robot_spawn_practice)
+    ld.add_action(robot_spawn_new)
+    return ld
